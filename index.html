@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OURO ATELIER · LEGEND OF OUROBOROS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ["class"],
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: "#09090b",
+                        surface: "#121216",
+                        burgundy: "#3b0d11",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+                        serif: ["Georgia", "Cambria", "Times New Roman", "serif"],
+                        krserif: ["Nanum Myeongjo", "Batang", "Georgia", "serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <style>
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-up {
+            animation: fadeSlideUp 0.45s ease-out both;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(24, 24, 27, 0.5);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(212, 175, 55, 0.35);
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="bg-obsidian text-stone-100 antialiased selection:bg-amber-500/30 selection:text-amber-200">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        const ADMIN_ID = "kimyulhwan!1";
+        const ADMIN_PASSCODE = "bquf080263!";
+
+        const DEFAULT_APP_CONFIG = {
+            brandLogo: "OURO",
+            domainName: "ouro.com",
+            topBannerSubtitle: "PRIVATE HOROLOGY ARCHIVE · SINGLE PIECE EDITION",
+            heroKicker: "SET IN MOTION",
+            bankName: "농협은행",
+            bankAccount: "302 1840 6909 01",
+            bankHolder: "OURO 부티크",
+            chatDelayNotice:
+                "※ 관리자 1:1 채팅은 확인 순서대로 순차 답변되므로 응답이 조금 늦을 수 있습니다. 메시지를 남겨주시면 확인 즉시 답변해 드립니다.",
+            pillars: [
+                {
+                    code: "01 · SCULPTED BEZEL",
+                    title: "입체 서펜트 스케일 베젤",
+                    desc: "12시 정각에 자리한 코브라 헤드와 베젤 둘레의 촘촘한 뱀 비늘 텍스처가 강렬한 조형미를 완성합니다.",
+                },
+                {
+                    code: "02 · OUROBOROS DIAL",
+                    title: "버건디 우드 & 골드 우로보로스",
+                    desc: "깊은 적갈색 다이얼 위에 자신의 꼬리를 문 황금 우로보로스 엠블럼과 웨이브 핸즈가 배치되어 있습니다.",
+                },
+                {
+                    code: "03 · DIRECT SETTLEMENT",
+                    title: "안심 계좌이체 & 택배 발송",
+                    desc: "이체 후 계좌이체 완료 버튼을 누르면 즉시 확인되어 관리자 문자가 발송되며 1:1 채팅으로도 상담할 수 있습니다.",
+                },
+            ],
+            themeAccent: "gold",
+            announcementBanner: "",
+            customFooterNote: "",
+        };
+
+        const THEME_PRESETS = {
+            gold: {
+                label: "로열 골드 & 옵시디언",
+                primaryText: "text-amber-400",
+                softText: "text-amber-300",
+                badgeBg: "bg-amber-500/10 border-amber-500/30 text-amber-300",
+                btnGrad: "from-amber-500 via-amber-400 to-yellow-500 text-zinc-950",
+                borderAccent: "border-amber-500/30",
+                userBubble: "bg-amber-500 text-zinc-950",
+                activePill: "bg-amber-500 text-zinc-950",
+            },
+            emerald: {
+                label: "에메랄드 다크 & 플래티넘",
+                primaryText: "text-emerald-400",
+                softText: "text-emerald-300",
+                badgeBg: "bg-emerald-500/10 border-emerald-500/30 text-emerald-300",
+                btnGrad: "from-emerald-500 via-teal-400 to-emerald-400 text-zinc-950",
+                borderAccent: "border-emerald-500/30",
+                userBubble: "bg-emerald-500 text-zinc-950",
+                activePill: "bg-emerald-500 text-zinc-950",
+            },
+            crimson: {
+                label: "버건디 크림슨 & 로즈",
+                primaryText: "text-rose-400",
+                softText: "text-rose-300",
+                badgeBg: "bg-rose-500/10 border-rose-500/30 text-rose-300",
+                btnGrad: "from-rose-500 via-red-400 to-amber-400 text-zinc-950",
+                borderAccent: "border-rose-500/30",
+                userBubble: "bg-rose-500 text-zinc-950",
+                activePill: "bg-rose-500 text-zinc-950",
+            },
+            sapphire: {
+                label: "미드나잇 사파이어 & 실버",
+                primaryText: "text-sky-400",
+                softText: "text-sky-300",
+                badgeBg: "bg-sky-500/10 border-sky-500/30 text-sky-300",
+                btnGrad: "from-sky-400 via-blue-400 to-indigo-400 text-zinc-950",
+                borderAccent: "border-sky-500/30",
+                userBubble: "bg-sky-400 text-zinc-950",
+                activePill: "bg-sky-400 text-zinc-950",
+            },
+        };
+
+        const OUROBOROS_WATCH_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#2a1f16"/>
+      <stop offset="60%" stop-color="#111013"/>
+      <stop offset="100%" stop-color="#070709"/>
+    </radialGradient>
+    <linearGradient id="bezelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6b635b"/>
+      <stop offset="50%" stop-color="#3a3532"/>
+      <stop offset="100%" stop-color="#1f1c1a"/>
+    </linearGradient>
+    <radialGradient id="dialGrad" cx="45%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#4e1818"/>
+      <stop offset="55%" stop-color="#270a0b"/>
+      <stop offset="100%" stop-color="#120405"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f6e29c"/>
+      <stop offset="45%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#8a6c1c"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#bgGlow)"/>
+  <rect x="225" y="30" width="150" height="140" rx="14" fill="#18181b" stroke="#2c2c32" stroke-width="2"/>
+  <rect x="225" y="430" width="150" height="140" rx="14" fill="#18181b" stroke="#2c2c32" stroke-width="2"/>
+  <rect x="466" y="274" width="26" height="52" rx="6" fill="url(#goldGrad)"/>
+  <circle cx="300" cy="300" r="172" fill="url(#bezelGrad)" stroke="#8c7f70" stroke-width="4"/>
+  <circle cx="300" cy="300" r="154" fill="none" stroke="#1b1817" stroke-width="16" stroke-dasharray="10 6"/>
+  <path d="M286 126 Q300 112 314 126 L308 148 Q300 155 292 148 Z" fill="#4f4842" stroke="#d4af37" stroke-width="1.5"/>
+  <circle cx="295" cy="134" r="2" fill="#ef4444"/>
+  <circle cx="305" cy="134" r="2" fill="#ef4444"/>
+  <circle cx="300" cy="300" r="136" fill="url(#dialGrad)" stroke="#d4af37" stroke-width="2"/>
+  <g fill="url(#goldGrad)" font-family="serif" font-size="22" font-weight="bold" text-anchor="middle">
+    <text x="300" y="192">XII</text>
+    <text x="412" y="308">III</text>
+    <text x="300" y="424">VI</text>
+    <text x="188" y="308">IX</text>
+  </g>
+  <circle cx="300" cy="300" r="62" fill="none" stroke="url(#goldGrad)" stroke-width="13"/>
+  <circle cx="300" cy="300" r="62" fill="none" stroke="#5e4710" stroke-width="13" stroke-dasharray="4 5" opacity="0.55"/>
+  <path d="M276 242 C292 230, 314 234, 320 246 C312 254, 294 254, 278 248 Z" fill="url(#goldGrad)" stroke="#4a3709" stroke-width="1.5"/>
+  <path d="M300 300 Q282 284 265 276 Q248 268 232 254" fill="none" stroke="url(#goldGrad)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M300 300 Q324 282 346 268 Q368 254 388 236" fill="none" stroke="url(#goldGrad)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M300 300 Q290 330 278 358 Q266 384 254 406" fill="none" stroke="#f5d77f" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="300" cy="300" r="7" fill="url(#goldGrad)" stroke="#2b2105" stroke-width="2"/>
+  <path d="M185 245 A130 130 0 0 1 415 245 Q300 285 185 245 Z" fill="#ffffff" opacity="0.09"/>
+</svg>
+`)}`;
+
+        const INITIAL_WATCH = {
+            id: "ouroboros-01",
+            brand: "OURO ATELIER",
+            model: "LEGEND OF OUROBOROS · SERPENT EDITION",
+            subtitle: "영원한 순환을 상징하는 우로보로스 스컬프팅 기계식 에디션",
+            price: 1,
+            status: "판매중",
+            condition: "S급 (실착 1회 · 민트급 컬렉터 컨디션)",
+            reference: "OURO-OB-01S",
+            caliber: "OURO Cal. OB-01 Automatic",
+            powerReserve: "약 72시간 파워리저브",
+            caseSize: "41mm · 18K 골드 & 스틸 하이브리드",
+            dial: "버건디 우드 텍스처 다이얼 & 웨이브 핸즈",
+            strap: "핸드스티치 블랙 레더 스트랩",
+            waterResistance: "100m / 10 ATM",
+            warranty: "OURO 부티크 정품 보증서 포함",
+            components: "시계 본품, OURO 전용 피아노 우드 케이스, 개런티 카드, 여분 스트랩",
+            imageUrl: OUROBOROS_WATCH_SVG,
+        };
+
+        function formatKRW(amount) {
+            const num = Number(amount) || 0;
+            return `${num.toLocaleString("ko-KR")}원`;
+        }
+
+        function formatTimeNow() {
+            return new Date().toLocaleTimeString("ko-KR", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+            });
+        }
+
+        function formatDateTimeNow() {
+            return new Date().toLocaleString("ko-KR", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+            });
+        }
+
+        function SvgBadge({ children, className = "w-4 h-4" }) {
+            return (
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={className}
+                >
+                    {children}
+                </svg>
+            );
+        }
+
+        const ShieldCheck = (p) => (
+            <SvgBadge {...p}>
+                <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+                <path d="m9 12 2 2 4-4" />
+            </SvgBadge>
+        );
+        const Clock = (p) => (
+            <SvgBadge {...p}>
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+            </SvgBadge>
+        );
+        const Sparkles = (p) => (
+            <SvgBadge {...p}>
+                <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1 1.3-1.3Z" />
+            </SvgBadge>
+        );
+        const User = (p) => (
+            <SvgBadge {...p}>
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+            </SvgBadge>
+        );
+        const MessageSquare = (p) => (
+            <SvgBadge {...p}>
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </SvgBadge>
+        );
+        const Lock = (p) => (
+            <SvgBadge {...p}>
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </SvgBadge>
+        );
+        const LogOut = (p) => (
+            <SvgBadge {...p}>
+                <path d="m16 17 5-5-5-5" />
+                <path d="M21 12H9" />
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            </SvgBadge>
+        );
+        const ArrowRight = (p) => (
+            <SvgBadge {...p}>
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+            </SvgBadge>
+        );
+        const Truck = (p) => (
+            <SvgBadge {...p}>
+                <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+                <path d="M15 18H9" />
+                <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
+                <circle cx="17" cy="18" r="2" />
+                <circle cx="7" cy="18" r="2" />
+            </SvgBadge>
+        );
+        const Copy = (p) => (
+            <SvgBadge {...p}>
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+            </SvgBadge>
+        );
+        const Check = (p) => (
+            <SvgBadge {...p}>
+                <polyline points="20 6 9 17 4 12" />
+            </SvgBadge>
+        );
+        const CircleCheck = (p) => (
+            <SvgBadge {...p}>
+                <circle cx="12" cy="12" r="10" />
+                <path d="m9 12 2 2 4-4" />
+            </SvgBadge>
+        );
+        const X = (p) => (
+            <SvgBadge {...p}>
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+            </SvgBadge>
+        );
+        const Send = (p) => (
+            <SvgBadge {...p}>
+                <path d="m22 2-7 20-4-9-9-4Z" />
+                <path d="M22 2 11 13" />
+            </SvgBadge>
+        );
+        const Paperclip = (p) => (
+            <SvgBadge {...p}>
+                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+            </SvgBadge>
+        );
+        const ClipboardList = (p) => (
+            <SvgBadge {...p}>
+                <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <path d="M12 11h4" />
+                <path d="M12 16h4" />
+                <path d="M8 11h.01" />
+                <path d="M8 16h.01" />
+            </SvgBadge>
+        );
+
+        const MEMORY_FALLBACK_STORE = {};
+        const LIVE_SYNC_CHANNEL =
+            typeof window !== "undefined" && "BroadcastChannel" in window
+                ? new BroadcastChannel("ouro_atelier_live_sync_v2")
+                : null;
+
+        function readStoredJson(key, fallbackValue) {
+            try {
+                const raw = window.localStorage.getItem(key);
+                if (raw !== null && raw !== undefined) {
+                    return JSON.parse(raw);
+                }
+            } catch (_) {}
+            if (Object.prototype.hasOwnProperty.call(MEMORY_FALLBACK_STORE, key)) {
+                try {
+                    return JSON.parse(MEMORY_FALLBACK_STORE[key]);
+                } catch (_) {}
+            }
+            return fallbackValue;
+        }
+
+        function writeStoredJson(key, value) {
+            try {
+                const serialized = JSON.stringify(value);
+                MEMORY_FALLBACK_STORE[key] = serialized;
+                window.localStorage.setItem(key, serialized);
+                if (LIVE_SYNC_CHANNEL) {
+                    LIVE_SYNC_CHANNEL.postMessage({ key, value, sentAt: Date.now() });
+                }
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function normalizeImageSrc(rawSrc, fallbackSrc = OUROBOROS_WATCH_SVG) {
+            if (typeof rawSrc !== "string") return fallbackSrc;
+            const trimmed = rawSrc.trim();
+            if (!trimmed) return fallbackSrc;
+            if (
+                trimmed.startsWith("data:image/") ||
+                trimmed.startsWith("blob:") ||
+                trimmed.startsWith("http://") ||
+                trimmed.startsWith("https://") ||
+                trimmed.startsWith("/") ||
+                trimmed.startsWith("./")
+            ) {
+                return trimmed;
+            }
+            return fallbackSrc;
+        }
+
+        function getOrderStatusBadgeStyle(status) {
+            if (status === "택배 발송 완료") {
+                return "bg-emerald-950/80 text-emerald-300 border-emerald-700/70";
+            }
+            if (status === "입금 확인 완료 · 발송 준비") {
+                return "bg-sky-950/80 text-sky-300 border-sky-700/70";
+            }
+            return "bg-amber-950/70 text-amber-300 border-amber-600/60";
+        }
+
+        function getOrderStepIndex(status) {
+            if (status === "택배 발송 완료") return 3;
+            if (status === "입금 확인 완료 · 발송 준비") return 2;
+            return 1;
+        }
+
+        function runLocalSiteEditor(commandText, currentConfig, currentWatch) {
+            const configUpdates = {};
+            const watchUpdates = {};
+            const notes = [];
+
+            if (/에메랄드|초록|그린|emerald/i.test(commandText)) {
+                configUpdates.themeAccent = "emerald";
+                notes.push("에메랄드 다크 테마 적용");
+            } else if (/버건디|레드|크림슨|빨강|crimson|rose/i.test(commandText)) {
+                configUpdates.themeAccent = "crimson";
+                notes.push("버건디 크림슨 테마 적용");
+            } else if (/사파이어|블루|파랑|sapphire/i.test(commandText)) {
+                configUpdates.themeAccent = "sapphire";
+                notes.push("미드나잇 사파이어 테마 적용");
+            } else if (/골드|금색|gold/i.test(commandText)) {
+                configUpdates.themeAccent = "gold";
+                notes.push("로열 골드 테마 적용");
+            }
+
+            const manwonMatch = commandText.match(/(\d+(?:,\d+)*)\s*만\s*원/);
+            const wonMatch = commandText.match(/(\d+(?:,\d+)*)\s*원/);
+            if (manwonMatch) {
+                watchUpdates.price = Number(manwonMatch[1].replace(/,/g, "")) * 10000;
+                notes.push(`가격 ${watchUpdates.price.toLocaleString()}원으로 변경`);
+            } else if (wonMatch) {
+                watchUpdates.price = Number(wonMatch[1].replace(/,/g, ""));
+                notes.push(`가격 ${watchUpdates.price.toLocaleString()}원으로 변경`);
+            }
+
+            if (/예약중|예약 중/.test(commandText)) {
+                watchUpdates.status = "예약중";
+                notes.push("상태 '예약중'으로 변경");
+            } else if (/판매완료|품절|솔드아웃/.test(commandText)) {
+                watchUpdates.status = "판매완료";
+                notes.push("상태 '판매완료'로 변경");
+            } else if (/판매중/.test(commandText)) {
+                watchUpdates.status = "판매중";
+                notes.push("상태 '판매중'으로 변경");
+            }
+
+            const brandMatch = commandText.match(/브랜드(?:명)?(?:을|를)?\s*["']?([A-Za-z0-9가-힣\s·_-]+?)["']?(?:으로|로)\s*바/);
+            if (brandMatch && brandMatch[1]) {
+                configUpdates.brandLogo = brandMatch[1].trim();
+                watchUpdates.brand = brandMatch[1].trim();
+                notes.push(`브랜드명 '${configUpdates.brandLogo}' 반영`);
+            }
+
+            const bannerMatch = commandText.match(/공지(?:사항|배너)?(?:을|를|에)?\s*["']?([^"'\n]+?)["']?(?:으로|로|라고)\s*(?:바|수정|띄워|등록)/);
+            if (bannerMatch && bannerMatch[1]) {
+                configUpdates.announcementBanner = bannerMatch[1].trim();
+                notes.push("상단 공지 배너 등록");
+            }
+
+            if (notes.length === 0) {
+                configUpdates.announcementBanner = commandText.trim();
+                notes.push("요청 문구를 상단 라이브 공지 배너에 반영했습니다.");
+            }
+
+            return {
+                summary: notes.join(" · "),
+                configUpdates,
+                watchUpdates,
+            };
+        }
+
+        function OuroAtelierApp() {
+            const [config, setConfig] = useState(() => ({
+                ...DEFAULT_APP_CONFIG,
+                ...readStoredJson("ouro_config_v2", DEFAULT_APP_CONFIG),
+            }));
+            const [watch, setWatch] = useState(() => {
+                const loaded = readStoredJson("ouro_watch_v2", INITIAL_WATCH);
+                return {
+                    ...INITIAL_WATCH,
+                    ...loaded,
+                    imageUrl: normalizeImageSrc(loaded?.imageUrl, INITIAL_WATCH.imageUrl),
+                };
+            });
+            const [orders, setOrders] = useState(() =>
+                readStoredJson("ouro_orders_v2", [])
+            );
+            const [messages, setMessages] = useState(() =>
+                readStoredJson("ouro_messages_v2", [
+                    {
+                        id: "msg-welcome-1",
+                        sender: "admin",
+                        senderName: "OURO 관리자",
+                        targetEmail: "ALL",
+                        text: "안녕하세요. OURO 부티크 1:1 채팅 상담창입니다. 계좌이체 확인 및 시계 관련 문의를 남겨주시면 확인 순서대로 순차 답변해 드립니다.",
+                        timestamp: formatTimeNow(),
+                    },
+                ])
+            );
+            const [customerSession, setCustomerSession] = useState(() =>
+                readStoredJson("ouro_customer_v2", null)
+            );
+            const [isAdmin, setIsAdmin] = useState(() =>
+                Boolean(readStoredJson("ouro_admin_authed_v2", false))
+            );
+
+            const [activeModal, setActiveModal] = useState(null);
+            const [authTab, setAuthTab] = useState("login");
+            const [customerNameInput, setCustomerNameInput] = useState("");
+            const [customerEmailInput, setCustomerEmailInput] = useState("");
+            const [customerPhoneInput, setCustomerPhoneInput] = useState("");
+            const [customerAddressInput, setCustomerAddressInput] = useState("");
+            const [authError, setAuthError] = useState("");
+
+            const [adminIdInput, setAdminIdInput] = useState("");
+            const [adminPassInput, setAdminPassInput] = useState("");
+            const [adminAuthError, setAdminAuthError] = useState("");
+
+            const [toastMessage, setToastMessage] = useState("");
+            const [copiedAccount, setCopiedAccount] = useState(false);
+
+            const [chatInput, setChatInput] = useState("");
+            const [chatSelectedCustomerEmail, setChatSelectedCustomerEmail] = useState("ALL");
+            const chatEndRef = useRef(null);
+
+            const [adminTab, setAdminTab] = useState("orders");
+            const [aiCommandInput, setAiCommandInput] = useState("");
+            const [aiCommandStatus, setAiCommandStatus] = useState("");
+            const [trackingInputs, setTrackingInputs] = useState({});
+
+            const [editBrand, setEditBrand] = useState(watch.brand);
+            const [editModel, setEditModel] = useState(watch.model);
+            const [editSubtitle, setEditSubtitle] = useState(watch.subtitle);
+            const [editPrice, setEditPrice] = useState(String(watch.price));
+            const [editStatus, setEditStatus] = useState(watch.status);
+            const [editCondition, setEditCondition] = useState(watch.condition);
+            const [editImageUrl, setEditImageUrl] = useState(watch.imageUrl);
+
+            const [editBankName, setEditBankName] = useState(config.bankName);
+            const [editBankAccount, setEditBankAccount] = useState(config.bankAccount);
+            const [editBankHolder, setEditBankHolder] = useState(config.bankHolder);
+            const [editThemeAccent, setEditThemeAccent] = useState(config.themeAccent || "gold");
+            const [editAnnouncementBanner, setEditAnnouncementBanner] = useState(config.announcementBanner || "");
+            const [editChatDelayNotice, setEditChatDelayNotice] = useState(config.chatDelayNotice);
+
+            useEffect(() => {
+                setEditBrand(watch.brand);
+                setEditModel(watch.model);
+                setEditSubtitle(watch.subtitle);
+                setEditPrice(String(watch.price));
+                setEditStatus(watch.status);
+                setEditCondition(watch.condition);
+                setEditImageUrl(watch.imageUrl);
+            }, [watch]);
+
+            useEffect(() => {
+                setEditBankName(config.bankName);
+                setEditBankAccount(config.bankAccount);
+                setEditBankHolder(config.bankHolder);
+                setEditThemeAccent(config.themeAccent || "gold");
+                setEditAnnouncementBanner(config.announcementBanner || "");
+                setEditChatDelayNotice(config.chatDelayNotice);
+            }, [config]);
+
+            useEffect(() => {
+                writeStoredJson("ouro_config_v2", config);
+            }, [config]);
+
+            useEffect(() => {
+                writeStoredJson("ouro_watch_v2", watch);
+            }, [watch]);
+
+            useEffect(() => {
+                writeStoredJson("ouro_orders_v2", orders);
+            }, [orders]);
+
+            useEffect(() => {
+                writeStoredJson("ouro_messages_v2", messages);
+            }, [messages]);
+
+            useEffect(() => {
+                writeStoredJson("ouro_customer_v2", customerSession);
+            }, [customerSession]);
+
+            useEffect(() => {
+                writeStoredJson("ouro_admin_authed_v2", isAdmin);
+            }, [isAdmin]);
+
+            useEffect(() => {
+                if (!LIVE_SYNC_CHANNEL) return;
+                const handleChannelMsg = (event) => {
+                    const payload = event.data;
+                    if (!payload || !payload.key) return;
+                    if (payload.key === "ouro_config_v2" && payload.value) {
+                        setConfig((prev) => ({ ...prev, ...payload.value }));
+                    } else if (payload.key === "ouro_watch_v2" && payload.value) {
+                        setWatch((prev) => ({
+                            ...prev,
+                            ...payload.value,
+                            imageUrl: normalizeImageSrc(payload.value.imageUrl, prev.imageUrl),
+                        }));
+                    } else if (payload.key === "ouro_orders_v2" && Array.isArray(payload.value)) {
+                        setOrders(payload.value);
+                    } else if (payload.key === "ouro_messages_v2" && Array.isArray(payload.value)) {
+                        setMessages(payload.value);
+                    }
+                };
+                LIVE_SYNC_CHANNEL.addEventListener("message", handleChannelMsg);
+                return () => LIVE_SYNC_CHANNEL.removeEventListener("message", handleChannelMsg);
+            }, []);
+
+            function showToast(msg) {
+                setToastMessage(msg);
+                setTimeout(() => {
+                    setToastMessage((prev) => (prev === msg ? "" : prev));
+                }, 3200);
+            }
+
+            const theme = THEME_PRESETS[config.themeAccent] || THEME_PRESETS.gold;
+
+            const myOrders = useMemo(() => {
+                if (!customerSession?.email) return [];
+                return orders.filter(
+                    (o) => (o.customerEmail || "").toLowerCase() === customerSession.email.toLowerCase()
+                );
+            }, [orders, customerSession]);
+
+            const visibleMessages = useMemo(() => {
+                if (isAdmin) {
+                    if (chatSelectedCustomerEmail === "ALL") return messages;
+                    return messages.filter(
+                        (m) =>
+                            m.targetEmail === "ALL" ||
+                            (m.customerEmail || "").toLowerCase() === chatSelectedCustomerEmail.toLowerCase() ||
+                            (m.targetEmail || "").toLowerCase() === chatSelectedCustomerEmail.toLowerCase()
+                    );
+                }
+                if (!customerSession?.email) {
+                    return messages.filter((m) => m.targetEmail === "ALL");
+                }
+                return messages.filter(
+                    (m) =>
+                        m.targetEmail === "ALL" ||
+                        (m.customerEmail || "").toLowerCase() === customerSession.email.toLowerCase() ||
+                        (m.targetEmail || "").toLowerCase() === customerSession.email.toLowerCase()
+                );
+            }, [messages, isAdmin, chatSelectedCustomerEmail, customerSession]);
+
+            useEffect(() => {
+                if (activeModal === "chat" && chatEndRef.current) {
+                    chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+                }
+            }, [visibleMessages, activeModal]);
+
+            function handleCustomerAuthSubmit(e) {
+                e.preventDefault();
+                const cleanEmail = customerEmailInput.trim();
+                const cleanName = customerNameInput.trim();
+                if (!cleanEmail || !cleanEmail.includes("@")) {
+                    setAuthError("올바른 이메일 주소를 입력해 주세요.");
+                    return;
+                }
+                if (authTab === "signup" && (!cleanName || !customerPhoneInput.trim())) {
+                    setAuthError("회원가입 시 이름과 연락처를 모두 입력해 주세요.");
+                    return;
+                }
+                const sessionObj = {
+                    name: cleanName || cleanEmail.split("@")[0],
+                    email: cleanEmail,
+                    phone: customerPhoneInput.trim() || "010-0000-0000",
+                    address: customerAddressInput.trim() || "서울특별시 강남구 테헤란로",
+                };
+                setCustomerSession(sessionObj);
+                setAuthError("");
+                setActiveModal(null);
+                showToast(`${sessionObj.name}님으로 로그인되었습니다.`);
+            }
+
+            function handleCustomerLogout() {
+                setCustomerSession(null);
+                showToast("로그아웃되었습니다.");
+            }
+
+            function handleAdminLoginSubmit(e) {
+                e.preventDefault();
+                if (adminIdInput.trim() === ADMIN_ID && adminPassInput === ADMIN_PASSCODE) {
+                    setIsAdmin(true);
+                    setAdminAuthError("");
+                    setActiveModal("admin");
+                    showToast("관리자 모드로 접속했습니다.");
+                } else {
+                    setAdminAuthError("관리자 아이디 또는 비밀번호가 일치하지 않습니다.");
+                }
+            }
+
+            function handleAdminLogout() {
+                setIsAdmin(false);
+                setActiveModal(null);
+                showToast("관리자 로그아웃이 완료되었습니다.");
+            }
+
+            function handleCopyAccount() {
+                const text = `${config.bankName} ${config.bankAccount} (${config.bankHolder})`;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(() => {});
+                }
+                setCopiedAccount(true);
+                showToast("계좌 정보가 클립보드에 복사되었습니다.");
+                setTimeout(() => setCopiedAccount(false), 2000);
+            }
+
+            function handleTransferComplete() {
+                const activeCustomer = customerSession || {
+                    name: "비회원 고객",
+                    email: "guest@ouro.com",
+                    phone: "010-0000-0000",
+                    address: "배송지 미입력 (채팅으로 안내)",
+                };
+                const newOrder = {
+                    id: `ORD-${Date.now().toString().slice(-6)}`,
+                    createdAt: formatDateTimeNow(),
+                    customerName: activeCustomer.name,
+                    customerEmail: activeCustomer.email,
+                    customerPhone: activeCustomer.phone,
+                    customerAddress: activeCustomer.address,
+                    watchModel: `${watch.brand} · ${watch.model}`,
+                    amount: Number(watch.price) || 0,
+                    status: "계좌이체 완료 · 확인대기",
+                    trackingNumber: "",
+                };
+                setOrders((prev) => [newOrder, ...prev]);
+
+                const systemMsg = {
+                    id: `msg-${Date.now()}`,
+                    sender: "customer",
+                    senderName: activeCustomer.name,
+                    customerEmail: activeCustomer.email,
+                    targetEmail: activeCustomer.email,
+                    text: `[계좌이체 완료 알림] ${activeCustomer.name}님이 ${formatKRW(newOrder.amount)} 계좌이체를 완료했습니다. (주문번호: ${newOrder.id})`,
+                    timestamp: formatTimeNow(),
+                };
+                setMessages((prev) => [...prev, systemMsg]);
+                showToast("계좌이체 완료가 접수되었습니다! 관리자 알림 및 채팅에 등록되었습니다.");
+            }
+
+            function handleSendChatMessage(e) {
+                e.preventDefault();
+                const trimmed = chatInput.trim();
+                if (!trimmed) return;
+
+                if (isAdmin) {
+                    const target = chatSelectedCustomerEmail || "ALL";
+                    const msg = {
+                        id: `msg-${Date.now()}`,
+                        sender: "admin",
+                        senderName: "OURO 관리자",
+                        customerEmail: target === "ALL" ? "ALL" : target,
+                        targetEmail: target,
+                        text: trimmed,
+                        timestamp: formatTimeNow(),
+                    };
+                    setMessages((prev) => [...prev, msg]);
+                } else {
+                    const senderEmail = customerSession?.email || "guest@ouro.com";
+                    const senderName = customerSession?.name || "방문 고객";
+                    const msg = {
+                        id: `msg-${Date.now()}`,
+                        sender: "customer",
+                        senderName,
+                        customerEmail: senderEmail,
+                        targetEmail: senderEmail,
+                        text: trimmed,
+                        timestamp: formatTimeNow(),
+                    };
+                    setMessages((prev) => [...prev, msg]);
+                }
+                setChatInput("");
+            }
+
+            function handleImageFileUpload(e) {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    if (typeof reader.result === "string") {
+                        setEditImageUrl(reader.result);
+                        setWatch((prev) => ({ ...prev, imageUrl: reader.result }));
+                        showToast("시계 이미지가 업로드되어 반영되었습니다.");
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function handleSaveWatchAndBank(e) {
+                e.preventDefault();
+                setWatch((prev) => ({
+                    ...prev,
+                    brand: editBrand.trim() || prev.brand,
+                    model: editModel.trim() || prev.model,
+                    subtitle: editSubtitle.trim() || prev.subtitle,
+                    price: Math.max(0, Number(editPrice) || 0),
+                    status: editStatus,
+                    condition: editCondition.trim() || prev.condition,
+                    imageUrl: normalizeImageSrc(editImageUrl, prev.imageUrl),
+                }));
+                setConfig((prev) => ({
+                    ...prev,
+                    bankName: editBankName.trim() || prev.bankName,
+                    bankAccount: editBankAccount.trim() || prev.bankAccount,
+                    bankHolder: editBankHolder.trim() || prev.bankHolder,
+                    themeAccent: editThemeAccent,
+                    announcementBanner: editAnnouncementBanner,
+                    chatDelayNotice: editChatDelayNotice.trim() || prev.chatDelayNotice,
+                }));
+                showToast("시계 정보 및 부티크 설정이 저장되었습니다.");
+            }
+
+            function handleUpdateOrderStatus(orderId, nextStatus) {
+                setOrders((prev) =>
+                    prev.map((o) => (o.id === orderId ? { ...o, status: nextStatus } : o))
+                );
+                showToast(`주문 ${orderId} 상태가 '${nextStatus}'로 변경되었습니다.`);
+            }
+
+            function handleSaveTracking(orderId) {
+                const trackNum = (trackingInputs[orderId] || "").trim();
+                if (!trackNum) {
+                    showToast("운송장 번호를 입력해 주세요.");
+                    return;
+                }
+                setOrders((prev) =>
+                    prev.map((o) =>
+                        o.id === orderId
+                            ? { ...o, trackingNumber: trackNum, status: "택배 발송 완료" }
+                            : o
+                    )
+                );
+                showToast(`운송장(${trackNum})이 등록되고 택배 발송 완료 처리되었습니다.`);
+            }
+
+            function handleApplyAiCommand(e) {
+                e.preventDefault();
+                if (!aiCommandInput.trim()) return;
+                const result = runLocalSiteEditor(aiCommandInput, config, watch);
+                if (result.configUpdates && Object.keys(result.configUpdates).length > 0) {
+                    setConfig((prev) => ({ ...prev, ...result.configUpdates }));
+                }
+                if (result.watchUpdates && Object.keys(result.watchUpdates).length > 0) {
+                    setWatch((prev) => ({ ...prev, ...result.watchUpdates }));
+                }
+                setAiCommandStatus(`반영 완료: ${result.summary}`);
+                setAiCommandInput("");
+                showToast("실시간 사이트 변경이 적용되었습니다.");
+            }
+
+            const uniqueCustomers = useMemo(() => {
+                const map = new Map();
+                orders.forEach((o) => {
+                    if (o.customerEmail) {
+                        map.set(o.customerEmail.toLowerCase(), {
+                            email: o.customerEmail,
+                            name: o.customerName || o.customerEmail,
+                        });
+                    }
+                });
+                messages.forEach((m) => {
+                    if (m.customerEmail && m.customerEmail !== "ALL") {
+                        map.set(m.customerEmail.toLowerCase(), {
+                            email: m.customerEmail,
+                            name: m.sender === "customer" ? m.senderName : m.customerEmail,
+                        });
+                    }
+                });
+                return Array.from(map.values());
+            }, [orders, messages]);
+
+            return (
+                <div className="min-h-screen bg-obsidian text-stone-100 flex flex-col">
+                    {toastMessage && (
+                        <div className="fixed bottom-5 right-5 z-50 max-w-sm rounded-xl border border-amber-500/40 bg-zinc-950/95 px-4 py-3 text-xs text-amber-200 shadow-2xl backdrop-blur animate-fade-up flex items-center gap-2.5">
+                            <CircleCheck className={`w-4 h-4 shrink-0 ${theme.primaryText}`} />
+                            <span>{toastMessage}</span>
+                        </div>
+                    )}
+
+                    {config.announcementBanner && (
+                        <div className="bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-amber-500/20 border-b border-amber-500/30 px-4 py-2 text-center text-xs text-amber-200">
+                            <span className="font-semibold mr-2">[NOTICE]</span>
+                            <span>{config.announcementBanner}</span>
+                        </div>
+                    )}
+
+                    <header className="sticky top-0 z-30 border-b border-zinc-800/80 bg-obsidian/90 backdrop-blur-md">
+                        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6">
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                                    className="flex items-center gap-2.5 text-left"
+                                >
+                                    <span className={`font-serif text-xl tracking-[0.22em] font-semibold ${theme.primaryText}`}>
+                                        {config.brandLogo}
+                                    </span>
+                                    <span className="hidden sm:inline-block text-[11px] tracking-widest text-zinc-400 uppercase border-l border-zinc-800 pl-3">
+                                        {config.topBannerSubtitle}
+                                    </span>
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-2 sm:gap-2.5">
+                                {customerSession ? (
+                                    <div className="flex items-center gap-1.5">
+                                        <button
+                                            onClick={() => setActiveModal("myOrders")}
+                                            className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-900/90 px-3 py-1.5 text-xs text-stone-200 hover:border-amber-500/50 transition"
+                                        >
+                                            <ClipboardList className="w-3.5 h-3.5 text-amber-400" />
+                                            <span className="hidden md:inline">{customerSession.name}</span>
+                                            <span>내 주문 ({myOrders.length})</span>
+                                        </button>
+                                        <button
+                                            onClick={handleCustomerLogout}
+                                            className="inline-flex items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900/60 px-2.5 py-1.5 text-xs text-zinc-400 hover:text-stone-200 transition"
+                                            title="로그아웃"
+                                        >
+                                            <LogOut className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            setAuthTab("login");
+                                            setAuthError("");
+                                            setActiveModal("customerAuth");
+                                        }}
+                                        className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-900/90 px-3 py-1.5 text-xs text-stone-200 hover:border-amber-500/50 transition"
+                                    >
+                                        <User className="w-3.5 h-3.5 text-amber-400" />
+                                        <span>로그인 / 가입</span>
+                                    </button>
+                                )}
+
+                                <button
+                                    onClick={() => setActiveModal("chat")}
+                                    className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-900/90 px-3 py-1.5 text-xs text-stone-200 hover:border-amber-500/50 transition"
+                                >
+                                    <MessageSquare className="w-3.5 h-3.5 text-amber-400" />
+                                    <span>1:1 채팅</span>
+                                </button>
+
+                                {isAdmin ? (
+                                    <button
+                                        onClick={() => setActiveModal("admin")}
+                                        className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r ${theme.btnGrad} px-3.5 py-1.5 text-xs font-semibold shadow-lg transition`}
+                                    >
+                                        <Lock className="w-3.5 h-3.5" />
+                                        <span>관리자 콘솔</span>
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            setAdminAuthError("");
+                                            setActiveModal("adminLogin");
+                                        }}
+                                        className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900/70 px-3 py-1.5 text-xs text-zinc-300 hover:border-zinc-600 transition"
+                                    >
+                                        <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                                        <span>관리자</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="flex-1">
+                        <section className="relative overflow-hidden border-b border-zinc-800/70 bg-gradient-to-b from-burgundy/25 via-obsidian to-obsidian py-12 sm:py-16">
+                            <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-4 sm:px-6 lg:grid-cols-12 lg:items-center">
+                                <div className="lg:col-span-6 space-y-6 animate-fade-up">
+                                    <div className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1 text-[11px] tracking-[0.2em] uppercase ${theme.badgeBg}`}>
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                        <span>{config.heroKicker}</span>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <p className="text-xs tracking-[0.25em] text-zinc-400 uppercase">
+                                            {watch.brand} · REF. {watch.reference}
+                                        </p>
+                                        <h1 className="font-serif text-3xl sm:text-5xl font-semibold tracking-tight text-stone-50 leading-tight">
+                                            {watch.model}
+                                        </h1>
+                                        <p className="font-krserif text-sm sm:text-base text-zinc-300 leading-relaxed">
+                                            {watch.subtitle}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-baseline gap-4 pt-1">
+                                        <span className={`text-3xl sm:text-4xl font-bold tracking-tight ${theme.primaryText}`}>
+                                            {formatKRW(watch.price)}
+                                        </span>
+                                        <span className="rounded-full border border-emerald-500/30 bg-emerald-950/50 px-3 py-1 text-xs font-medium text-emerald-300">
+                                            {watch.status}
+                                        </span>
+                                        <span className="text-xs text-zinc-400">{watch.condition}</span>
+                                    </div>
+
+                                    <div className="rounded-2xl border border-zinc-800 bg-surface/90 p-4 sm:p-5 space-y-3">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="text-xs font-semibold tracking-wider text-zinc-400 uppercase">
+                                                DIRECT BANK TRANSFER · 계좌이체 안내
+                                            </span>
+                                            <button
+                                                onClick={handleCopyAccount}
+                                                className="inline-flex items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs text-stone-200 hover:border-amber-500/50 transition"
+                                            >
+                                                {copiedAccount ? (
+                                                    <>
+                                                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                                        <span>복사됨</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Copy className="w-3.5 h-3.5 text-amber-400" />
+                                                        <span>계좌 복사</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                                            <div>
+                                                <span className="text-zinc-400 mr-2">{config.bankName}</span>
+                                                <span className="font-mono text-base sm:text-lg font-semibold text-stone-100">
+                                                    {config.bankAccount}
+                                                </span>
+                                            </div>
+                                            <span className="text-xs text-zinc-400">
+                                                예금주: <strong className="text-stone-200">{config.bankHolder}</strong>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                                        <button
+                                            onClick={handleTransferComplete}
+                                            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r ${theme.btnGrad} px-6 py-3.5 text-sm font-bold shadow-xl hover:brightness-105 transition`}
+                                        >
+                                            <CircleCheck className="w-4 h-4" />
+                                            <span>계좌이체 완료</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveModal("chat")}
+                                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/90 px-5 py-3.5 text-sm font-medium text-stone-100 hover:border-amber-500/50 transition"
+                                        >
+                                            <MessageSquare className="w-4 h-4 text-amber-400" />
+                                            <span>1:1 채팅 상담</span>
+                                            <ArrowRight className="w-4 h-4 text-zinc-400" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="lg:col-span-6 animate-fade-up">
+                                    <div className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-surface p-4 sm:p-6 shadow-2xl">
+                                        <div className="aspect-square w-full overflow-hidden rounded-2xl bg-zinc-950 flex items-center justify-center">
+                                            <img
+                                                src={normalizeImageSrc(watch.imageUrl, OUROBOROS_WATCH_SVG)}
+                                                alt={watch.model}
+                                                className="h-full w-full object-contain transition duration-500 hover:scale-105"
+                                            />
+                                        </div>
+                                        <div className="mt-4 flex items-center justify-between text-xs text-zinc-400 px-1">
+                                            <span className="inline-flex items-center gap-1.5">
+                                                <ShieldCheck className={`w-4 h-4 ${theme.primaryText}`} />
+                                                <span>{watch.warranty}</span>
+                                            </span>
+                                            <span className="inline-flex items-center gap-1.5">
+                                                <Truck className="w-4 h-4 text-zinc-400" />
+                                                <span>우체국/택배 안전 발송</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                {(config.pillars || DEFAULT_APP_CONFIG.pillars).map((pillar, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="rounded-2xl border border-zinc-800/90 bg-surface/80 p-6 space-y-2.5 hover:border-zinc-700 transition"
+                                    >
+                                        <p className={`text-[11px] font-semibold tracking-[0.2em] uppercase ${theme.softText}`}>
+                                            {pillar.code}
+                                        </p>
+                                        <h2 className="font-krserif text-lg font-semibold text-stone-100">
+                                            {pillar.title}
+                                        </h2>
+                                        <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+                                            {pillar.desc}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
+                            <div className="rounded-3xl border border-zinc-800 bg-surface/90 p-6 sm:p-8">
+                                <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-zinc-800 pb-4">
+                                    <div>
+                                        <p className={`text-[11px] tracking-[0.22em] uppercase ${theme.softText}`}>
+                                            TECHNICAL SPECIFICATION
+                                        </p>
+                                        <h2 className="font-serif text-2xl text-stone-100 mt-1">
+                                            Archive Specifications
+                                        </h2>
+                                    </div>
+                                    <span className="text-xs text-zinc-400">REF: {watch.reference}</span>
+                                </div>
+
+                                <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 text-sm">
+                                    <div className="rounded-xl bg-zinc-950/70 p-4 border border-zinc-800/70">
+                                        <dt className="text-xs text-zinc-500">칼리버 / 무브먼트</dt>
+                                        <dd className="mt-1 font-medium text-stone-200">{watch.caliber}</dd>
+                                    </div>
+                                    <div className="rounded-xl bg-zinc-950/70 p-4 border border-zinc-800/70">
+                                        <dt className="text-xs text-zinc-500">파워리저브</dt>
+                                        <dd className="mt-1 font-medium text-stone-200">{watch.powerReserve}</dd>
+                                    </div>
+                                    <div className="rounded-xl bg-zinc-950/70 p-4 border border-zinc-800/70">
+                                        <dt className="text-xs text-zinc-500">케이스 규격</dt>
+                                        <dd className="mt-1 font-medium text-stone-200">{watch.caseSize}</dd>
+                                    </div>
+                                    <div className="rounded-xl bg-zinc-950/70 p-4 border border-zinc-800/70">
+                                        <dt className="text-xs text-zinc-500">다이얼 & 핸즈</dt>
+                                        <dd className="mt-1 font-medium text-stone-200">{watch.dial}</dd>
+                                    </div>
+                                    <div className="rounded-xl bg-zinc-950/70 p-4 border border-zinc-800/70">
+                                        <dt className="text-xs text-zinc-500">스트랩</dt>
+                                        <dd className="mt-1 font-medium text-stone-200">{watch.strap}</dd>
+                                    </div>
+                                    <div className="rounded-xl bg-zinc-950/70 p-4 border border-zinc-800/70">
+                                        <dt className="text-xs text-zinc-500">방수 성능</dt>
+                                        <dd className="mt-1 font-medium text-stone-200">{watch.waterResistance}</dd>
+                                    </div>
+                                    <div className="rounded-xl bg-zinc-950/70 p-4 border border-zinc-800/70 sm:col-span-2 lg:col-span-3">
+                                        <dt className="text-xs text-zinc-500">구성품</dt>
+                                        <dd className="mt-1 font-medium text-stone-200">{watch.components}</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </section>
+                    </main>
+
+                    <footer className="border-t border-zinc-800/80 bg-zinc-950 py-8 px-4 sm:px-6 text-xs text-zinc-500">
+                        <div className="mx-auto flex max-w-6xl flex-col sm:flex-row items-center justify-between gap-4">
+                            <div>
+                                <span className="font-serif text-sm tracking-[0.2em] text-stone-300 mr-3">
+                                    {config.brandLogo}
+                                </span>
+                                <span>© {new Date().getFullYear()} {config.domainName}. All rights reserved.</span>
+                            </div>
+                            <p className="text-center sm:text-right text-zinc-500">
+                                {config.customFooterNote || "프라이빗 호롤로지 아카이브 · 계좌이체 및 1:1 상담 지원"}
+                            </p>
+                        </div>
+                    </footer>
+
+                    {/* 고객 로그인 / 회원가입 모달 */}
+                    {activeModal === "customerAuth" && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+                            <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-surface p-6 shadow-2xl space-y-5">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="font-serif text-lg text-stone-100">회원 로그인 / 가입</h3>
+                                    <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-stone-200">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-2 rounded-xl bg-zinc-950 p-1 border border-zinc-800 text-xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setAuthTab("login"); setAuthError(""); }}
+                                        className={`py-2 rounded-lg font-medium transition ${authTab === "login" ? theme.activePill : "text-zinc-400"}`}
+                                    >
+                                        로그인
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setAuthTab("signup"); setAuthError(""); }}
+                                        className={`py-2 rounded-lg font-medium transition ${authTab === "signup" ? theme.activePill : "text-zinc-400"}`}
+                                    >
+                                        회원가입
+                                    </button>
+                                </div>
+
+                                <form onSubmit={handleCustomerAuthSubmit} className="space-y-3 text-xs">
+                                    <div>
+                                        <label className="block text-zinc-400 mb-1">이메일 *</label>
+                                        <input
+                                            type="email"
+                                            value={customerEmailInput}
+                                            onChange={(e) => setCustomerEmailInput(e.target.value)}
+                                            placeholder="collector@example.com"
+                                            className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-stone-100 focus:border-amber-500/60 focus:outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-zinc-400 mb-1">
+                                            이름 {authTab === "signup" ? "*" : "(선택)"}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={customerNameInput}
+                                            onChange={(e) => setCustomerNameInput(e.target.value)}
+                                            placeholder="홍길동"
+                                            className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-stone-100 focus:border-amber-500/60 focus:outline-none"
+                                        />
+                                    </div>
+                                    {authTab === "signup" && (
+                                        <>
+                                            <div>
+                                                <label className="block text-zinc-400 mb-1">연락처 *</label>
+                                                <input
+                                                    type="text"
+                                                    value={customerPhoneInput}
+                                                    onChange={(e) => setCustomerPhoneInput(e.target.value)}
+                                                    placeholder="010-1234-5678"
+                                                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-stone-100 focus:border-amber-500/60 focus:outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-zinc-400 mb-1">수령 주소 (선택)</label>
+                                                <input
+                                                    type="text"
+                                                    value={customerAddressInput}
+                                                    onChange={(e) => setCustomerAddressInput(e.target.value)}
+                                                    placeholder="택배 수령 주소를 입력하세요"
+                                                    className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-stone-100 focus:border-amber-500/60 focus:outline-none"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+                                    {authError && <p className="text-rose-400 text-xs">{authError}</p>}
+                                    <button
+                                        type="submit"
+                                        className={`w-full rounded-xl bg-gradient-to-r ${theme.btnGrad} py-3 text-xs font-bold mt-2`}
+                                    >
+                                        {authTab === "login" ? "로그인하기" : "가입 및 시작하기"}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 내 주문 내역 모달 */}
+                    {activeModal === "myOrders" && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+                            <div className="w-full max-w-2xl rounded-2xl border border-zinc-800 bg-surface p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+                                <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                                    <div>
+                                        <h3 className="font-serif text-lg text-stone-100">내 주문 및 발송 현황</h3>
+                                        <p className="text-xs text-zinc-400">{customerSession?.email}</p>
+                                    </div>
+                                    <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-stone-200">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="overflow-y-auto custom-scrollbar space-y-3 flex-1 pr-1">
+                                    {myOrders.length === 0 ? (
+                                        <div className="rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-8 text-center text-xs text-zinc-400">
+                                            아직 접수된 계좌이체 주문 내역이 없습니다.
+                                        </div>
+                                    ) : (
+                                        myOrders.map((ord) => {
+                                            const step = getOrderStepIndex(ord.status);
+                                            return (
+                                                <div key={ord.id} className="rounded-xl border border-zinc-800 bg-zinc-950/80 p-4 space-y-3">
+                                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                                        <div>
+                                                            <span className="font-mono text-xs text-zinc-400 mr-2">#{ord.id}</span>
+                                                            <span className="text-xs text-zinc-500">{ord.createdAt}</span>
+                                                        </div>
+                                                        <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${getOrderStatusBadgeStyle(ord.status)}`}>
+                                                            {ord.status}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between text-xs">
+                                                        <span className="text-stone-200 font-medium">{ord.watchModel}</span>
+                                                        <span className={`font-bold ${theme.primaryText}`}>{formatKRW(ord.amount)}</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-3 gap-2 text-[11px] pt-1">
+                                                        <div className={`rounded-lg p-2 text-center border ${step >= 1 ? "border-amber-500/40 bg-amber-500/10 text-amber-200" : "border-zinc-800 text-zinc-500"}`}>
+                                                            1. 이체 접수
+                                                        </div>
+                                                        <div className={`rounded-lg p-2 text-center border ${step >= 2 ? "border-sky-500/40 bg-sky-500/10 text-sky-200" : "border-zinc-800 text-zinc-500"}`}>
+                                                            2. 입금 확인
+                                                        </div>
+                                                        <div className={`rounded-lg p-2 text-center border ${step >= 3 ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200" : "border-zinc-800 text-zinc-500"}`}>
+                                                            3. 택배 발송
+                                                        </div>
+                                                    </div>
+                                                    {ord.trackingNumber && (
+                                                        <p className="text-xs text-emerald-300">
+                                                            운송장 번호: <span className="font-mono font-semibold">{ord.trackingNumber}</span>
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 1:1 채팅 모달 */}
+                    {activeModal === "chat" && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+                            <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-surface shadow-2xl flex flex-col h-[78vh]">
+                                <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+                                    <div>
+                                        <h3 className="font-serif text-base text-stone-100">OURO 부티크 1:1 채팅</h3>
+                                        <p className="text-[11px] text-zinc-400">
+                                            {isAdmin ? "관리자 상담 모드" : `${customerSession?.name || "방문 고객"}님 상담창`}
+                                        </p>
+                                    </div>
+                                    <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-stone-200">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 text-[11px] text-amber-200/90 leading-relaxed">
+                                    {config.chatDelayNotice}
+                                </div>
+
+                                {isAdmin && (
+                                    <div className="border-b border-zinc-800 px-4 py-2 bg-zinc-950/60 flex items-center gap-2 text-xs">
+                                        <span className="text-zinc-400 shrink-0">대화 대상:</span>
+                                        <select
+                                            value={chatSelectedCustomerEmail}
+                                            onChange={(e) => setChatSelectedCustomerEmail(e.target.value)}
+                                            className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs text-stone-100"
+                                        >
+                                            <option value="ALL">전체 공지 / 전체 보기</option>
+                                            {uniqueCustomers.map((c) => (
+                                                <option key={c.email} value={c.email}>
+                                                    {c.name} ({c.email})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
+                                    {visibleMessages.map((m) => {
+                                        const isMine = isAdmin ? m.sender === "admin" : m.sender === "customer";
+                                        return (
+                                            <div key={m.id} className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}>
+                                                <span className="text-[10px] text-zinc-500 mb-1 px-1">
+                                                    {m.senderName} · {m.timestamp}
+                                                </span>
+                                                <div
+                                                    className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
+                                                        isMine
+                                                            ? `${theme.userBubble} font-medium`
+                                                            : "bg-zinc-900 border border-zinc-800 text-stone-200"
+                                                    }`}
+                                                >
+                                                    {m.text}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    <div ref={chatEndRef} />
+                                </div>
+
+                                <form onSubmit={handleSendChatMessage} className="border-t border-zinc-800 p-3 flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        value={chatInput}
+                                        onChange={(e) => setChatInput(e.target.value)}
+                                        placeholder="문의 내용이나 입금자명을 입력하세요..."
+                                        className="flex-1 rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-xs text-stone-100 focus:border-amber-500/60 focus:outline-none"
+                                    />
+                                    <button
+                                        type="submit"
+                                        className={`inline-flex items-center justify-center rounded-xl bg-gradient-to-r ${theme.btnGrad} p-2.5`}
+                                    >
+                                        <Send className="w-4 h-4" />
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 관리자 로그인 모달 */}
+                    {activeModal === "adminLogin" && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+                            <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-surface p-6 shadow-2xl space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="font-serif text-lg text-stone-100">관리자 인증</h3>
+                                    <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-stone-200">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <form onSubmit={handleAdminLoginSubmit} className="space-y-3 text-xs">
+                                    <div>
+                                        <label className="block text-zinc-400 mb-1">관리자 ID</label>
+                                        <input
+                                            type="text"
+                                            value={adminIdInput}
+                                            onChange={(e) => setAdminIdInput(e.target.value)}
+                                            className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-stone-100"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-zinc-400 mb-1">비밀번호</label>
+                                        <input
+                                            type="password"
+                                            value={adminPassInput}
+                                            onChange={(e) => setAdminPassInput(e.target.value)}
+                                            className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-stone-100"
+                                        />
+                                    </div>
+                                    {adminAuthError && <p className="text-rose-400">{adminAuthError}</p>}
+                                    <button
+                                        type="submit"
+                                        className={`w-full rounded-xl bg-gradient-to-r ${theme.btnGrad} py-2.5 font-bold mt-1`}
+                                    >
+                                        접속하기
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 관리자 콘솔 모달 */}
+                    {activeModal === "admin" && isAdmin && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-6 backdrop-blur-sm">
+                            <div className="w-full max-w-4xl rounded-3xl border border-zinc-800 bg-surface p-5 sm:p-7 shadow-2xl max-h-[90vh] flex flex-col space-y-5">
+                                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-4">
+                                    <div>
+                                        <h3 className="font-serif text-xl text-stone-100">OURO 관리자 콘솔</h3>
+                                        <p className="text-xs text-zinc-400">주문/발송 관리 · 상품/계좌/테마 설정 · 자연어 사이트 편집</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={handleAdminLogout}
+                                            className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-300 hover:text-white"
+                                        >
+                                            관리자 로그아웃
+                                        </button>
+                                        <button onClick={() => setActiveModal(null)} className="text-zinc-400 hover:text-stone-200 p-1">
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2 text-xs">
+                                    <button
+                                        onClick={() => setAdminTab("orders")}
+                                        className={`px-4 py-2 rounded-xl font-medium ${adminTab === "orders" ? theme.activePill : "bg-zinc-900 text-zinc-400"}`}
+                                    >
+                                        주문 및 발송 ({orders.length})
+                                    </button>
+                                    <button
+                                        onClick={() => setAdminTab("catalog")}
+                                        className={`px-4 py-2 rounded-xl font-medium ${adminTab === "catalog" ? theme.activePill : "bg-zinc-900 text-zinc-400"}`}
+                                    >
+                                        시계 · 계좌 · 테마 설정
+                                    </button>
+                                    <button
+                                        onClick={() => setAdminTab("aiEdit")}
+                                        className={`px-4 py-2 rounded-xl font-medium ${adminTab === "aiEdit" ? theme.activePill : "bg-zinc-900 text-zinc-400"}`}
+                                    >
+                                        빠른 명령 편집
+                                    </button>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-4 text-xs">
+                                    {adminTab === "orders" && (
+                                        <div className="space-y-3">
+                                            {orders.length === 0 ? (
+                                                <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-8 text-center text-zinc-400">
+                                                    접수된 주문이 없습니다.
+                                                </div>
+                                            ) : (
+                                                orders.map((ord) => (
+                                                    <div key={ord.id} className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 space-y-3">
+                                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                                            <div>
+                                                                <span className="font-mono font-semibold text-stone-200 mr-2">#{ord.id}</span>
+                                                                <span className="text-zinc-400">{ord.customerName} ({ord.customerEmail})</span>
+                                                                <span className="text-zinc-500 ml-2">{ord.createdAt}</span>
+                                                            </div>
+                                                            <span className={`rounded-full border px-2.5 py-0.5 text-[11px] ${getOrderStatusBadgeStyle(ord.status)}`}>
+                                                                {ord.status}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex flex-wrap items-center justify-between gap-2 text-zinc-300">
+                                                            <span>{ord.watchModel} · <strong>{formatKRW(ord.amount)}</strong></span>
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                <button
+                                                                    onClick={() => handleUpdateOrderStatus(ord.id, "입금 확인 완료 · 발송 준비")}
+                                                                    className="rounded-lg border border-sky-700/60 bg-sky-950/50 px-2.5 py-1 text-sky-300 hover:bg-sky-900/60"
+                                                                >
+                                                                    입금 확인
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleUpdateOrderStatus(ord.id, "택배 발송 완료")}
+                                                                    className="rounded-lg border border-emerald-700/60 bg-emerald-950/50 px-2.5 py-1 text-emerald-300 hover:bg-emerald-900/60"
+                                                                >
+                                                                    발송 완료
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 pt-1">
+                                                            <input
+                                                                type="text"
+                                                                value={trackingInputs[ord.id] ?? ord.trackingNumber ?? ""}
+                                                                onChange={(e) =>
+                                                                    setTrackingInputs((prev) => ({ ...prev, [ord.id]: e.target.value }))
+                                                                }
+                                                                placeholder="택배 운송장 번호 입력"
+                                                                className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-stone-100"
+                                                            />
+                                                            <button
+                                                                onClick={() => handleSaveTracking(ord.id)}
+                                                                className="rounded-lg bg-zinc-800 px-3 py-1.5 text-stone-100 hover:bg-zinc-700"
+                                                            >
+                                                                운송장 등록
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {adminTab === "catalog" && (
+                                        <form onSubmit={handleSaveWatchAndBank} className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
+                                            <div>
+                                                <label className="block text-zinc-400 mb-1">브랜드명</label>
+                                                <input
+                                                    type="text"
+                                                    value={editBrand}
+                                                    onChange={(e) => setEditBrand(e.target.value)}
+                                                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-stone-100"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-zinc-400 mb-1">모델명</label>
+                                                <input
+                                                    type="text"
+                                                    value={editModel}
+                                                    onChange={(e) => setEditModel(e.target.value)}
+                                                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-stone-100"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-zinc-400 mb-1">판매가 (원)</label>
+                                                <input
+                                                    type="number"
+                                                    value={editPrice}
+                                                    onChange={(e) => setEditPrice(e.target.value)}
+                                                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-stone-100"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-zinc-400 mb-1">판매 상태</label>
+                                                <select
+                                                    value={editStatus}
+                                                    onChange={(e) => setEditStatus(e.target.value)}
+                                                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-stone-100"
+                                                >
+                                                    <option value="판매중">판매중</option>
+                                                    <option value="예약중">예약중</option>
+                                                    <option value="판매완료">판매완료</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-zinc-400 mb-1">은행명</label>
+                                                <input
+                                                    type="text"
+                                                    value={editBankName}
+                                                    onChange={(e) => setEditBankName(e.target.value)}
+                                                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-stone-100"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-zinc-400 mb-1">계좌번호</label>
+                                                <input
+                                                    type="text"
+                                                    value={editBankAccount}
+                                                    onChange={(e) => setEditBankAccount(e.target.value)}
+                                                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-stone-100"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-zinc-400 mb-1">예금주</label>
+                                                <input
+                                                    type="text"
+                                                    value={editBankHolder}
+                                                    onChange={(e) => setEditBankHolder(e.target.value)}
+                                                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-stone-100"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-zinc-400 mb-1">컬러 테마</label>
+                                                <select
+                                                    value={editThemeAccent}
+                                                    onChange={(e) => setEditThemeAccent(e.target.value)}
+                                                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-stone-100"
+                                                >
+                                                    {Object.entries(THEME_PRESETS).map(([k, v]) => (
+                                                        <option key={k} value={k}>{v.label}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="sm:col-span-2">
+                                                <label className="block text-zinc-400 mb-1">시계 이미지 파일 업로드 (또는 URL)</label>
+                                                <div className="flex flex-col sm:flex-row gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={editImageUrl}
+                                                        onChange={(e) => setEditImageUrl(e.target.value)}
+                                                        className="flex-1 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-stone-100"
+                                                    />
+                                                    <label className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800 px-3.5 py-2 text-stone-200 cursor-pointer hover:bg-zinc-700">
+                                                        <Paperclip className="w-3.5 h-3.5" />
+                                                        <span>파일 선택</span>
+                                                        <input type="file" accept="image/*" onChange={handleImageFileUpload} className="hidden" />
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div className="sm:col-span-2">
+                                                <label className="block text-zinc-400 mb-1">상단 공지 배너 (비워두면 숨김)</label>
+                                                <input
+                                                    type="text"
+                                                    value={editAnnouncementBanner}
+                                                    onChange={(e) => setEditAnnouncementBanner(e.target.value)}
+                                                    placeholder="예: 11월 한정 무료 특급 배송 이벤트 진행 중"
+                                                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-stone-100"
+                                                />
+                                            </div>
+                                            <div className="sm:col-span-2 flex justify-end pt-2">
+                                                <button
+                                                    type="submit"
+                                                    className={`rounded-xl bg-gradient-to-r ${theme.btnGrad} px-6 py-2.5 font-bold`}
+                                                >
+                                                    변경사항 저장
+                                                </button>
+                                            </div>
+                                        </form>
+                                    )}
+
+                                    {adminTab === "aiEdit" && (
+                                        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-5 space-y-4">
+                                            <p className="text-zinc-300 leading-relaxed">
+                                                원하는 변경 내용을 자연어로 입력하세요. 예: <span className="text-amber-300">"가격 550만원으로 바꿔줘"</span>, <span className="text-amber-300">"에메랄드 테마로 변경"</span>, <span className="text-amber-300">"상태 예약중으로 해줘"</span>
+                                            </p>
+                                            <form onSubmit={handleApplyAiCommand} className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={aiCommandInput}
+                                                    onChange={(e) => setAiCommandInput(e.target.value)}
+                                                    placeholder="예: 사파이어 테마로 변경하고 가격을 2500000원으로 바꿔줘"
+                                                    className="flex-1 rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-stone-100"
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    className={`rounded-xl bg-gradient-to-r ${theme.btnGrad} px-5 py-2.5 font-bold`}
+                                                >
+                                                    즉시 적용
+                                                </button>
+                                            </form>
+                                            {aiCommandStatus && (
+                                                <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-3 text-emerald-300">
+                                                    {aiCommandStatus}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<OuroAtelierApp />);
+    </script>
+</body>
+</html>
